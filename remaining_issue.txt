@@ -1,0 +1,22 @@
+1. withdrawal system not working 
+
+2. admin jo task add kar rha hai usko modern card me dikhana hai with glasmophisim card actrective like box and icon big thumbnail, engaging price box , and full actrective start btn 
+
+3. task detls page me koich issue hai ek bar chheak karo 
+
+4. pending_task.html task be modern task history 
+
+
+4.  trajection page be modern history 
+
+5. setting page not working fully not working 
+
+5. admin panall ahow me modern actrective card creation box with 100% modern ui please we modern and actrective design improves logic admin panll 
+
+6. check everything find all issue nad fixed please 🥺 
+
+
+IMPORTANT NOTICE 
+THIS WEBSITE IS FULLY STATIC HTML CSS JS FIRWBSE REALTIME DB PLEASE DON'T MAKE SERVERS SIDE APROCH OR NOD JS AND ANYTHING PLEASE MAKE WE STATIC AND FAST WITH FIRWBSE REALRIMW DB + ONVALUE SNAPSHOT LISTENER 😃 DATA UPDATE REAL TIME 
+
+
