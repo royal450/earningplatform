@@ -88,9 +88,6 @@ function setupPWAInstall() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     adminDeferredPrompt = e;
-    if (installBtn) {
-      installBtn.style.display = 'block';
-    }
   });
   
   if (installBtn) {
@@ -99,7 +96,7 @@ function setupPWAInstall() {
         await Swal.fire({
           icon: 'info',
           title: 'Already Installed',
-          text: 'App is already installed or not available for installation',
+          html: 'Admin Panel app is already installed on your device.<br><br>You can find it in your app drawer or home screen.',
           confirmButtonColor: '#6366f1'
         });
         return;
@@ -112,10 +109,11 @@ function setupPWAInstall() {
         await Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'App installed successfully on your device!',
+          text: 'Admin Panel app installed successfully on your device!',
           confirmButtonColor: '#6366f1'
         });
-        installBtn.style.display = 'none';
+        installBtn.innerHTML = '<i class="fas fa-check-circle"></i> App Installed';
+        installBtn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
       }
       
       adminDeferredPrompt = null;
@@ -124,7 +122,8 @@ function setupPWAInstall() {
   
   window.addEventListener('appinstalled', () => {
     if (installBtn) {
-      installBtn.style.display = 'none';
+      installBtn.innerHTML = '<i class="fas fa-check-circle"></i> App Installed';
+      installBtn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
     }
   });
 }
