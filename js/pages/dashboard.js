@@ -463,18 +463,14 @@ function createModernTaskCard(task, index) {
     const taskDescription = task.description || task.desc || 'Complete this task and earn instant rewards!';
     const taskPrice = task.price || task.amount || task.reward || 25;
     
-    // FOMO Marketing - Get or generate persistent completion count
-    let fomoCount = task.fomoCount || null;
-    if (!fomoCount) {
-        // Generate random number between 500-2000 for FOMO
-        fomoCount = Math.floor(Math.random() * 1501) + 500;
-        // Note: Admin will need to save this to database for persistence
-    }
+    // FOMO Marketing - Get persistent completion count with safe default
+    const fomoCount = task.fomoCount || Math.floor(Math.random() * 1501) + 500;
     
-    // Check user completion status
+    // Check user completion status with safe defaults
     const userStatus = task.userStatus || 'available';
     const isCompleted = userStatus === 'completed';
     const isPending = userStatus === 'pending';
+    const isAvailable = userStatus === 'available';
     
     // Get task image based on title
     const taskImage = getTaskImage(task);
@@ -506,7 +502,7 @@ function createModernTaskCard(task, index) {
         <!-- Premium Glow Border -->
         <div style="position: absolute; inset: 0; border-radius: 20px; padding: 1px; background: linear-gradient(135deg, var(--accent-color), #8b5cf6, #06b6d4); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: ${isCompleted ? '0.2' : '0.4'}; pointer-events: none;"></div>
         
-        <!-- Completion Status Overlay -->
+        <!-- Completion Status Overlay - Only show if task is actually completed -->
         ${isCompleted ? `
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(34, 197, 94, 0.95); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 50px; border: 2px solid white; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);">
                 <div style="display: flex; align-items: center; gap: 8px; color: white; font-weight: 900; font-size: 14px; letter-spacing: 0.5px;">
@@ -523,8 +519,8 @@ function createModernTaskCard(task, index) {
                 <div style="background: ${difficultyColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; box-shadow: 0 2px 8px ${difficultyColor}40;">
                     ${difficultyText}
                 </div>
-                <div style="background: ${isPending ? '#f59e0b' : 'rgba(0,0,0,0.8)'}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; backdrop-filter: blur(10px);">
-                    ${isPending ? 'UNDER REVIEW ⏳' : 'LIVE 🎉🥳'}
+                <div style="background: ${isPending ? '#f59e0b' : isCompleted ? '#22c55e' : 'rgba(0,0,0,0.8)'}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; backdrop-filter: blur(10px);">
+                    ${isPending ? 'UNDER REVIEW ⏳' : isCompleted ? 'COMPLETED ✅' : 'LIVE 🎉🥳'}
                 </div>
             </div>
             
