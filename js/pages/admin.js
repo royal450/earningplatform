@@ -85,19 +85,36 @@ let adminDeferredPrompt;
 function setupPWAInstall() {
   const installBtn = document.getElementById('adminPwaInstallBtn');
   
+  // Register service worker for admin PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw-admin.js', { scope: '/admin.html' })
+      .then(() => console.log('Admin Service Worker registered'))
+      .catch(err => console.log('Service Worker registration failed:', err));
+  }
+  
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     adminDeferredPrompt = e;
+    console.log('Admin PWA install prompt available');
   });
   
   if (installBtn) {
     installBtn.addEventListener('click', async () => {
       if (!adminDeferredPrompt) {
-        await Swal.fire({
+        // Try to trigger install manually
+        const result = await Swal.fire({
           icon: 'info',
-          title: 'Already Installed',
-          html: 'Admin Panel app is already installed on your device.<br><br>You can find it in your app drawer or home screen.',
-          confirmButtonColor: '#6366f1'
+          title: 'Install Admin App',
+          html: `
+            <p>To install Admin Panel as a separate app:</p>
+            <ol style="text-align: left; padding-left: 20px;">
+              <li>Open browser menu (⋮)</li>
+              <li>Select "Install app" or "Add to Home screen"</li>
+              <li>Admin Panel will install as separate app</li>
+            </ol>
+          `,
+          confirmButtonColor: '#6366f1',
+          confirmButtonText: 'Got it!'
         });
         return;
       }
@@ -109,7 +126,7 @@ function setupPWAInstall() {
         await Swal.fire({
           icon: 'success',
           title: 'Success!',
-          text: 'Admin Panel app installed successfully on your device!',
+          html: 'Admin Panel app installed successfully!<br><br>Check your home screen for "CBK Admin" app.',
           confirmButtonColor: '#6366f1'
         });
         installBtn.innerHTML = '<i class="fas fa-check-circle"></i> App Installed';
@@ -125,6 +142,13 @@ function setupPWAInstall() {
       installBtn.innerHTML = '<i class="fas fa-check-circle"></i> App Installed';
       installBtn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
     }
+    Swal.fire({
+      icon: 'success',
+      title: 'Installed!',
+      text: 'Admin Panel is now available as a separate app on your device!',
+      timer: 3000,
+      showConfirmButton: false
+    });
   });
 }
 
