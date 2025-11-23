@@ -679,7 +679,14 @@ async function approveWithdrawal(withdrawalId, userId, amount) {
     
     if (!result.isConfirmed) return;
     
-    showLoading('Processing...');
+    Swal.fire({
+      title: 'Processing...',
+      html: 'Please wait while we process the withdrawal',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
     
     // Update withdrawal status
     const timestamp = Date.now();
@@ -705,8 +712,6 @@ async function approveWithdrawal(withdrawalId, userId, amount) {
     
     console.log('Transaction record created');
     
-    hideLoading();
-    
     await Swal.fire({
       icon: 'success',
       title: 'Success',
@@ -716,7 +721,6 @@ async function approveWithdrawal(withdrawalId, userId, amount) {
     
     loadView('withdrawals');
   } catch (error) {
-    hideLoading();
     console.error('Error approving withdrawal:', error);
     await Swal.fire({
       icon: 'error',
@@ -745,7 +749,14 @@ async function rejectWithdrawal(withdrawalId, userId) {
     });
     
     if (reason) {
-      showLoading('Processing...');
+      Swal.fire({
+        title: 'Processing...',
+        html: 'Please wait while we process the rejection',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
       
       const timestamp = Date.now();
       await updateData(`WITHDRAWALS/${withdrawalId}`, { 
@@ -769,8 +780,6 @@ async function rejectWithdrawal(withdrawalId, userId) {
         withdrawalId: withdrawalId
       });
       
-      hideLoading();
-      
       await Swal.fire({
         icon: 'success',
         title: 'Rejected',
@@ -781,7 +790,6 @@ async function rejectWithdrawal(withdrawalId, userId) {
       loadView('withdrawals');
     }
   } catch (error) {
-    hideLoading();
     console.error('Error rejecting withdrawal:', error);
     await Swal.fire({
       icon: 'error',
