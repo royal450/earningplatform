@@ -320,6 +320,15 @@ window.showAddTaskModal = async function() {
             <i class="fas fa-info-circle"></i> This will show as "{count} users payment done ✅" on task cards. Random value generated for you.
           </div>
         </div>
+        <div style="margin: 10px 0; padding: 12px; background: rgba(16,185,129,0.1); border-radius: 8px; border: 1px solid rgba(16,185,129,0.3);">
+          <label style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 5px; display: block;">
+            <i class="fas fa-users"></i> Looted By Count
+          </label>
+          <input id="taskLootedCount" class="swal2-input" type="number" value="0" placeholder="Number of users who looted this task" style="margin: 0;">
+          <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
+            <i class="fas fa-info-circle"></i> This will show as "🔥 {count} People Looted" on task cards. Enter your desired number.
+          </div>
+        </div>
       </div>
     `,
     confirmButtonText: 'Create Task',
@@ -337,6 +346,7 @@ window.showAddTaskModal = async function() {
       const instructions = document.getElementById('taskInstructions').value.trim();
       const timeLimit = document.getElementById('taskTimeLimit').value;
       const fomoCount = document.getElementById('taskFomoCount').value;
+      const lootedCount = document.getElementById('taskLootedCount').value;
       
       if (!title || !description || !price || !url) {
         Swal.showValidationMessage('Please fill all required fields');
@@ -353,6 +363,11 @@ window.showAddTaskModal = async function() {
         return false;
       }
       
+      if (lootedCount && (parseInt(lootedCount) < 0 || parseInt(lootedCount) > 10000)) {
+        Swal.showValidationMessage('Looted count must be between 0 and 10000');
+        return false;
+      }
+      
       const steps = stepsText ? stepsText.split('\n').filter(s => s.trim()).map(s => s.trim()) : [];
       
       return {
@@ -364,7 +379,8 @@ window.showAddTaskModal = async function() {
         steps,
         instructions: instructions || 'Complete all steps honestly.',
         timeLimit: timeLimit ? parseInt(timeLimit) : null,
-        fomoCount: fomoCount ? parseInt(fomoCount) : randomFomoCount
+        fomoCount: fomoCount ? parseInt(fomoCount) : randomFomoCount,
+        lootedByCount: lootedCount ? parseInt(lootedCount) : 0
       };
     }
   });
@@ -380,7 +396,7 @@ window.showAddTaskModal = async function() {
         completedBy: [],
         createdAt: Date.now(),
         likedByCount: Math.floor(Math.random() * 400) + 100,
-        lootedByCount: Math.floor(Math.random() * 150) + 50,
+        lootedByCount: formValues.lootedByCount, // Admin-defined looted count
         fomoCount: formValues.fomoCount // Save FOMO count to database
       });
       
