@@ -339,7 +339,45 @@ async function loadTasks() {
         return;
     }
     
+    // Check task completion status for current user
+    await checkUserTaskStatus(activeTasks);
+    
     displayTasks(activeTasks);
+}
+
+// Check which tasks user has completed
+async function checkUserTaskStatus(tasks) {
+    try {
+        // Get all pending tasks
+        const allPendingTasks = await getData('PENDING_TASKS');
+        
+        // Mark tasks as completed or pending for current user
+        for (let task of tasks) {
+            // Check if in completedBy array
+            const completedBy = task.completedBy || [];
+            if (completedBy.includes(currentUser.uid)) {
+                task.userStatus = 'completed';
+                continue;
+            }
+            
+            // Check if pending review
+            if (allPendingTasks) {
+                const pending = Object.values(allPendingTasks).find(p => 
+                    p.userId === currentUser.uid && 
+                    p.taskId === task.id && 
+                    p.status === 'pending'
+                );
+                if (pending) {
+                    task.userStatus = 'pending';
+                    continue;
+                }
+            }
+            
+            task.userStatus = 'available';
+        }
+    } catch (error) {
+        console.error('Error checking task status:', error);
+    }
 }
 
 // Display tasks in the UI - ULTRA MODERN DESIGN
@@ -425,6 +463,19 @@ function createModernTaskCard(task, index) {
     const taskDescription = task.description || task.desc || 'Complete this task and earn instant rewards!';
     const taskPrice = task.price || task.amount || task.reward || 25;
     
+    // FOMO Marketing - Get or generate persistent completion count
+    let fomoCount = task.fomoCount || null;
+    if (!fomoCount) {
+        // Generate random number between 500-2000 for FOMO
+        fomoCount = Math.floor(Math.random() * 1501) + 500;
+        // Note: Admin will need to save this to database for persistence
+    }
+    
+    // Check user completion status
+    const userStatus = task.userStatus || 'available';
+    const isCompleted = userStatus === 'completed';
+    const isPending = userStatus === 'pending';
+    
     // Get task image based on title
     const taskImage = getTaskImage(task);
     
@@ -453,17 +504,27 @@ function createModernTaskCard(task, index) {
 
     card.innerHTML = `
         <!-- Premium Glow Border -->
-        <div style="position: absolute; inset: 0; border-radius: 20px; padding: 1px; background: linear-gradient(135deg, var(--accent-color), #8b5cf6, #06b6d4); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.4; pointer-events: none;"></div>
+        <div style="position: absolute; inset: 0; border-radius: 20px; padding: 1px; background: linear-gradient(135deg, var(--accent-color), #8b5cf6, #06b6d4); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: ${isCompleted ? '0.2' : '0.4'}; pointer-events: none;"></div>
+        
+        <!-- Completion Status Overlay -->
+        ${isCompleted ? `
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(34, 197, 94, 0.95); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 50px; border: 2px solid white; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);">
+                <div style="display: flex; align-items: center; gap: 8px; color: white; font-weight: 900; font-size: 14px; letter-spacing: 0.5px;">
+                    <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+                    <span>ALREADY COMPLETED</span>
+                </div>
+            </div>
+        ` : ''}
         
         <!-- Header Section -->
-        <div style="position: relative; padding: 14px 16px 12px; background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 100%); border-bottom: 1px solid rgba(99,102,241,0.1);">
+        <div style="position: relative; padding: 14px 16px 12px; background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 100%); border-bottom: 1px solid rgba(99,102,241,0.1); ${isCompleted ? 'opacity: 0.6;' : ''}">
             <!-- Badges Row -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div style="background: ${difficultyColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; box-shadow: 0 2px 8px ${difficultyColor}40;">
                     ${difficultyText}
                 </div>
-                <div style="background: rgba(0,0,0,0.8); color: white; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; backdrop-filter: blur(10px);">
-                    LIVE 🎉🥳 
+                <div style="background: ${isPending ? '#f59e0b' : 'rgba(0,0,0,0.8)'}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 9px; font-weight: 700; backdrop-filter: blur(10px);">
+                    ${isPending ? 'UNDER REVIEW ⏳' : 'LIVE 🎉🥳'}
                 </div>
             </div>
             
@@ -488,23 +549,19 @@ function createModernTaskCard(task, index) {
                 </div>
             ` : ''}
             
-            <!-- Completion Stats Overlay -->
+            <!-- FOMO Stats Overlay -->
             <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 16px; background: linear-gradient(transparent, rgba(0,0,0,0.9));">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: none; align-items: center; gap: 6px;">
-                        <div style="width: 4px; height: 4px; background: #10b981; border-radius: 50%;"></div>
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 600;">${randomCompletions}+ Completed</div>
-                    </div>
-                    <div style="display: none; align-items: center; gap: 6px;">
-                        <i class="fas fa-star" style="font-size: 10px; color: #fbbf24;"></i>
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 600;">4.5 Rating</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 5px; height: 5px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.95); font-weight: 700;">${fomoCount} users payment done ✅</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Content Section -->
-        <div style="padding: 14px 16px;">
+        <div style="padding: 14px 16px; ${isCompleted ? 'opacity: 0.6;' : ''}">
             <!-- Description -->
             <p style="font-size: 12px; color: var(--text-color); opacity: 0.8; line-height: 1.4; margin: 0 0 14px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                 ${taskDescription}
@@ -532,6 +589,7 @@ function createModernTaskCard(task, index) {
                 <button 
                     class="modern-like-btn" 
                     data-task-id="${task.id}"
+                    ${isCompleted || isPending ? 'disabled' : ''}
                     style="flex: 1; 
                            background: rgba(99,102,241,0.08); 
                            border: 1.5px solid rgba(99,102,241,0.2);
@@ -540,12 +598,13 @@ function createModernTaskCard(task, index) {
                            font-size: 11px; 
                            font-weight: 800; 
                            color: var(--accent-color); 
-                           cursor: pointer; 
+                           cursor: ${isCompleted || isPending ? 'not-allowed' : 'pointer'}; 
                            transition: all 0.2s ease;
                            display: flex;
                            align-items: center;
                            justify-content: center;
-                           gap: 5px;">
+                           gap: 5px;
+                           opacity: ${isCompleted || isPending ? '0.5' : '1'};">
                     <i class="fas fa-heart" style="font-size: 11px;"></i>
                     <span>LIKE</span>
                 </button>
@@ -554,24 +613,26 @@ function createModernTaskCard(task, index) {
                 <button 
                     class="modern-start-btn" 
                     data-task-id="${task.id}"
+                    ${isCompleted || isPending ? 'disabled' : ''}
                     style="flex: 2; 
-                           background: linear-gradient(135deg, var(--accent-color), #8b5cf6); 
+                           background: ${isCompleted ? 'linear-gradient(135deg, #22c55e, #16a34a)' : isPending ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, var(--accent-color), #8b5cf6)'}; 
                            border: none; 
                            padding: 11px 16px; 
                            border-radius: 10px; 
                            font-size: 12px; 
                            font-weight: 800; 
                            color: white; 
-                           cursor: pointer; 
+                           cursor: ${isCompleted || isPending ? 'not-allowed' : 'pointer'}; 
                            transition: all 0.3s ease;
                            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
                            display: flex;
                            align-items: center;
                            justify-content: center;
                            gap: 6px;
-                           letter-spacing: 0.3px;">
-                    <i class="fas fa-play" style="font-size: 10px;"></i>
-                    <span>START NOW</span>
+                           letter-spacing: 0.3px;
+                           opacity: ${isCompleted || isPending ? '0.7' : '1'};">
+                    <i class="fas ${isCompleted ? 'fa-check-circle' : isPending ? 'fa-clock' : 'fa-play'}" style="font-size: 10px;"></i>
+                    <span>${isCompleted ? 'COMPLETED' : isPending ? 'PENDING' : 'START NOW'}</span>
                 </button>
             </div>
         </div>

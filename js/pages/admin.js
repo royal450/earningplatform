@@ -295,10 +295,14 @@ async function loadTasksView() {
 }
 
 window.showAddTaskModal = async function() {
+  // Generate random FOMO count
+  const randomFomoCount = Math.floor(Math.random() * 1501) + 500; // 500-2000
+  
   const { value: formValues } = await Swal.fire({
     title: 'Create New Task',
+    width: '600px',
     html: `
-      <div style="text-align: left;">
+      <div style="text-align: left; max-height: 500px; overflow-y: auto; padding-right: 10px;">
         <input id="taskTitle" class="swal2-input" placeholder="Task Title *" style="margin: 5px 0;">
         <textarea id="taskDesc" class="swal2-input" placeholder="Description *" style="margin: 5px 0; height: 60px;"></textarea>
         <input id="taskPrice" class="swal2-input" type="number" placeholder="Price (₹) *" style="margin: 5px 0;">
@@ -307,6 +311,15 @@ window.showAddTaskModal = async function() {
         <textarea id="taskSteps" class="swal2-input" placeholder="Steps (one per line)" style="margin: 5px 0; height: 80px;"></textarea>
         <textarea id="taskInstructions" class="swal2-input" placeholder="Important Instructions" style="margin: 5px 0; height: 60px;"></textarea>
         <input id="taskTimeLimit" class="swal2-input" type="number" placeholder="Time Limit (seconds, optional)" style="margin: 5px 0;">
+        <div style="margin: 10px 0; padding: 12px; background: rgba(99,102,241,0.1); border-radius: 8px; border: 1px solid rgba(99,102,241,0.3);">
+          <label style="font-size: 13px; font-weight: 700; color: #6366f1; margin-bottom: 5px; display: block;">
+            <i class="fas fa-fire"></i> FOMO Marketing Count
+          </label>
+          <input id="taskFomoCount" class="swal2-input" type="number" value="${randomFomoCount}" placeholder="Users payment done count" style="margin: 0;">
+          <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
+            <i class="fas fa-info-circle"></i> This will show as "{count} users payment done ✅" on task cards. Random value generated for you.
+          </div>
+        </div>
       </div>
     `,
     confirmButtonText: 'Create Task',
@@ -323,6 +336,7 @@ window.showAddTaskModal = async function() {
       const stepsText = document.getElementById('taskSteps').value;
       const instructions = document.getElementById('taskInstructions').value.trim();
       const timeLimit = document.getElementById('taskTimeLimit').value;
+      const fomoCount = document.getElementById('taskFomoCount').value;
       
       if (!title || !description || !price || !url) {
         Swal.showValidationMessage('Please fill all required fields');
@@ -331,6 +345,11 @@ window.showAddTaskModal = async function() {
       
       if (parseFloat(price) <= 0) {
         Swal.showValidationMessage('Price must be greater than 0');
+        return false;
+      }
+      
+      if (fomoCount && (parseInt(fomoCount) < 0 || parseInt(fomoCount) > 10000)) {
+        Swal.showValidationMessage('FOMO count must be between 0 and 10000');
         return false;
       }
       
@@ -344,7 +363,8 @@ window.showAddTaskModal = async function() {
         thumbnail: thumbnail || null,
         steps,
         instructions: instructions || 'Complete all steps honestly.',
-        timeLimit: timeLimit ? parseInt(timeLimit) : null
+        timeLimit: timeLimit ? parseInt(timeLimit) : null,
+        fomoCount: fomoCount ? parseInt(fomoCount) : randomFomoCount
       };
     }
   });
@@ -360,7 +380,8 @@ window.showAddTaskModal = async function() {
         completedBy: [],
         createdAt: Date.now(),
         likedByCount: Math.floor(Math.random() * 400) + 100,
-        lootedByCount: Math.floor(Math.random() * 150) + 50
+        lootedByCount: Math.floor(Math.random() * 150) + 50,
+        fomoCount: formValues.fomoCount // Save FOMO count to database
       });
       
       await Swal.fire({
