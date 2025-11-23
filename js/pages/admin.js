@@ -295,9 +295,6 @@ async function loadTasksView() {
 }
 
 window.showAddTaskModal = async function() {
-  // Generate random FOMO count
-  const randomFomoCount = Math.floor(Math.random() * 1501) + 500; // 500-2000
-  
   const { value: formValues } = await Swal.fire({
     title: 'Create New Task',
     width: '600px',
@@ -315,9 +312,9 @@ window.showAddTaskModal = async function() {
           <label style="font-size: 13px; font-weight: 700; color: #6366f1; margin-bottom: 5px; display: block;">
             <i class="fas fa-fire"></i> FOMO Marketing Count
           </label>
-          <input id="taskFomoCount" class="swal2-input" type="number" value="${randomFomoCount}" placeholder="Users payment done count" style="margin: 0;">
+          <input id="taskFomoCount" class="swal2-input" type="number" value="0" placeholder="Users payment done count" style="margin: 0;">
           <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
-            <i class="fas fa-info-circle"></i> This will show as "{count} users payment done ✅" on task cards. Random value generated for you.
+            <i class="fas fa-info-circle"></i> This will show as "{count} users payment done ✅" on task cards. Enter your desired number.
           </div>
         </div>
         <div style="margin: 10px 0; padding: 12px; background: rgba(16,185,129,0.1); border-radius: 8px; border: 1px solid rgba(16,185,129,0.3);">
@@ -379,7 +376,7 @@ window.showAddTaskModal = async function() {
         steps,
         instructions: instructions || 'Complete all steps honestly.',
         timeLimit: timeLimit ? parseInt(timeLimit) : null,
-        fomoCount: fomoCount ? parseInt(fomoCount) : randomFomoCount,
+        fomoCount: fomoCount ? parseInt(fomoCount) : 0,
         lootedByCount: lootedCount ? parseInt(lootedCount) : 0
       };
     }
@@ -395,9 +392,9 @@ window.showAddTaskModal = async function() {
         likesData: {},
         completedBy: [],
         createdAt: Date.now(),
-        likedByCount: Math.floor(Math.random() * 400) + 100,
+        likedByCount: 0,
         lootedByCount: formValues.lootedByCount, // Admin-defined looted count
-        fomoCount: formValues.fomoCount // Save FOMO count to database
+        fomoCount: formValues.fomoCount // Admin-defined FOMO count
       });
       
       await Swal.fire({
