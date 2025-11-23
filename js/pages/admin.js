@@ -281,6 +281,7 @@ async function loadTasksView() {
             <td>${formatCurrency(task.price || 0)}</td>
             <td>${task.status || 'inactive'}</td>
             <td>
+              <button class="btn btn-primary" onclick="window.editTask('${task.id}')">Edit</button>
               <button class="btn btn-warning" onclick="window.toggleTask('${task.id}')">${task.status === 'active' ? 'Deactivate' : 'Activate'}</button>
               <button class="btn btn-danger" onclick="window.deleteTask('${task.id}')">Delete</button>
             </td>
@@ -290,6 +291,7 @@ async function loadTasksView() {
     </table>
   `;
   
+  window.editTask = editTask;
   window.toggleTask = toggleTask;
   window.deleteTask = deleteTask;
 }
@@ -416,6 +418,125 @@ window.showAddTaskModal = async function() {
     }
   }
 };
+
+async function editTask(taskId) {
+  try {
+    const task = await getData(`TASKS/${taskId}`);
+    
+    if (!task) {
+      showToast('Task not found!', 'error');
+      return;
+    }
+    
+    const { value: formValues } = await Swal.fire({
+      title: 'Edit Task',
+      width: '600px',
+      html: `
+        <div style="text-align: left; max-height: 500px; overflow-y: auto; padding-right: 10px;">
+          <input id="taskTitle" class="swal2-input" placeholder="Task Title *" value="${task.title || ''}" style="margin: 5px 0;">
+          <textarea id="taskDesc" class="swal2-input" placeholder="Description *" style="margin: 5px 0; height: 60px;">${task.description || ''}</textarea>
+          <input id="taskPrice" class="swal2-input" type="number" placeholder="Price (₹) *" value="${task.price || 0}" style="margin: 5px 0;">
+          <input id="taskUrl" class="swal2-input" placeholder="Task URL *" value="${task.url || ''}" style="margin: 5px 0;">
+          <input id="taskThumbnail" class="swal2-input" placeholder="Thumbnail URL (optional)" value="${task.thumbnail || ''}" style="margin: 5px 0;">
+          <textarea id="taskSteps" class="swal2-input" placeholder="Steps (one per line)" style="margin: 5px 0; height: 80px;">${(task.steps || []).join('\n')}</textarea>
+          <textarea id="taskInstructions" class="swal2-input" placeholder="Important Instructions" style="margin: 5px 0; height: 60px;">${task.instructions || ''}</textarea>
+          <input id="taskTimeLimit" class="swal2-input" type="number" placeholder="Time Limit (seconds, optional)" value="${task.timeLimit || ''}" style="margin: 5px 0;">
+          <div style="margin: 10px 0; padding: 12px; background: rgba(99,102,241,0.1); border-radius: 8px; border: 1px solid rgba(99,102,241,0.3);">
+            <label style="font-size: 13px; font-weight: 700; color: #6366f1; margin-bottom: 5px; display: block;">
+              <i class="fas fa-fire"></i> FOMO Marketing Count
+            </label>
+            <input id="taskFomoCount" class="swal2-input" type="number" value="${task.fomoCount || 0}" placeholder="Users payment done count" style="margin: 0;">
+            <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
+              <i class="fas fa-info-circle"></i> This will show as "{count} users payment done ✅" on task cards.
+            </div>
+          </div>
+          <div style="margin: 10px 0; padding: 12px; background: rgba(16,185,129,0.1); border-radius: 8px; border: 1px solid rgba(16,185,129,0.3);">
+            <label style="font-size: 13px; font-weight: 700; color: #10b981; margin-bottom: 5px; display: block;">
+              <i class="fas fa-users"></i> Looted By Count
+            </label>
+            <input id="taskLootedCount" class="swal2-input" type="number" value="${task.lootedByCount || 0}" placeholder="Number of users who looted this task" style="margin: 0;">
+            <div style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
+              <i class="fas fa-info-circle"></i> This will show as "🔥 {count} People Looted" on task cards.
+            </div>
+          </div>
+        </div>
+      `,
+      confirmButtonText: 'Update Task',
+      confirmButtonColor: '#6366f1',
+      cancelButtonText: 'Cancel',
+      showCancelButton: true,
+      focusConfirm: false,
+      preConfirm: () => {
+        const title = document.getElementById('taskTitle').value.trim();
+        const description = document.getElementById('taskDesc').value.trim();
+        const price = document.getElementById('taskPrice').value;
+        const url = document.getElementById('taskUrl').value.trim();
+        const thumbnail = document.getElementById('taskThumbnail').value.trim();
+        const stepsText = document.getElementById('taskSteps').value;
+        const instructions = document.getElementById('taskInstructions').value.trim();
+        const timeLimit = document.getElementById('taskTimeLimit').value;
+        const fomoCount = document.getElementById('taskFomoCount').value;
+        const lootedCount = document.getElementById('taskLootedCount').value;
+        
+        if (!title || !description || !price || !url) {
+          Swal.showValidationMessage('Please fill all required fields');
+          return false;
+        }
+        
+        if (parseFloat(price) <= 0) {
+          Swal.showValidationMessage('Price must be greater than 0');
+          return false;
+        }
+        
+        if (fomoCount && (parseInt(fomoCount) < 0 || parseInt(fomoCount) > 10000)) {
+          Swal.showValidationMessage('FOMO count must be between 0 and 10000');
+          return false;
+        }
+        
+        if (lootedCount && (parseInt(lootedCount) < 0 || parseInt(lootedCount) > 10000)) {
+          Swal.showValidationMessage('Looted count must be between 0 and 10000');
+          return false;
+        }
+        
+        const steps = stepsText ? stepsText.split('\n').filter(s => s.trim()).map(s => s.trim()) : [];
+        
+        return {
+          title,
+          description,
+          price: parseFloat(price),
+          url,
+          thumbnail: thumbnail || null,
+          steps,
+          instructions: instructions || 'Complete all steps honestly.',
+          timeLimit: timeLimit ? parseInt(timeLimit) : null,
+          fomoCount: fomoCount ? parseInt(fomoCount) : 0,
+          lootedByCount: lootedCount ? parseInt(lootedCount) : 0
+        };
+      }
+    });
+    
+    if (formValues) {
+      await updateData(`TASKS/${taskId}`, formValues);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+        text: 'Task updated successfully',
+        confirmButtonColor: '#6366f1'
+      });
+      
+      loadView('tasks');
+    }
+  } catch (error) {
+    console.error('Error editing task:', error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to update task: ' + error.message,
+      confirmButtonColor: '#ef4444'
+    });
+  }
+}
 
 async function toggleTask(taskId) {
   const task = await getData(`TASKS/${taskId}`);
