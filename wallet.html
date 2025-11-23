@@ -177,8 +177,8 @@
     <a href="referral.html" class="menu-item"><i class="fas fa-chart-line"></i><span>Refer & Earn</span></a>
     <a href="checkin.html" class="menu-item"><i class="fas fa-calendar-check"></i><span>Daily Check-in</span></a>
     <a href="pending-tasks.html" class="menu-item"><i class="fas fa-clock"></i><span>Pending Tasks</span></a>
-    <div class="menu-divider"></div>
-    <a href="settings.html" class="menu-item"><i class="fas fa-cog"></i><span>Settings</span></a>
+      <div class="menu-divider"></div>
+      <a href="settings.html" class="menu-item"><i class="fas fa-cog"></i><span>Settings</span></a>
     <a href="https://wa.me/919104037184" target="_blank" class="menu-item"><i class="fas fa-phone"></i><span>Support</span></a>
   </div>
 
@@ -303,9 +303,9 @@
   <script type="module">
     import { auth } from './js/shared/firebase-config.js';
     import { initAuthGuard } from './js/shared/auth-guard.js';
-    
+
     let currentUser = null;
-    
+
     document.addEventListener('DOMContentLoaded', async function() {
       currentUser = await initAuthGuard(async (user) => {
         currentUser = user;
@@ -314,43 +314,43 @@
         initThemeToggle();
       });
     });
-    
+
     function initNavigation() {
       const menuBtn = document.getElementById('menuBtn');
       const hamburgerMenu = document.getElementById('hamburgerMenu');
       const menuDropdown = document.getElementById('menuDropdown');
       const walletBtn = document.getElementById('walletBtn');
-      
+
       if (menuBtn) {
         menuBtn.addEventListener('click', () => {
           menuDropdown.classList.toggle('active');
         });
       }
-      
+
       if (hamburgerMenu) {
         hamburgerMenu.addEventListener('click', () => {
           menuDropdown.classList.toggle('active');
         });
       }
-      
+
       if (walletBtn) {
         walletBtn.addEventListener('click', () => {
           window.location.href = 'wallet.html';
         });
       }
-      
+
       document.addEventListener('click', (e) => {
         if (!e.target.closest('#menuBtn') && !e.target.closest('#hamburgerMenu') && !e.target.closest('#menuDropdown')) {
           menuDropdown?.classList.remove('active');
         }
       });
     }
-    
+
     async function initThemeToggle() {
       const themeToggle = document.getElementById('themeToggle');
       const body = document.body;
       const themeText = themeToggle.querySelector('.theme-text');
-      
+
       themeToggle.addEventListener('click', () => {
         const currentTheme = body.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';

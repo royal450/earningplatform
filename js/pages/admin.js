@@ -74,8 +74,59 @@ async function checkAdminAccess() {
 
 async function initAdminPanel() {
   await setupThemeToggle();
+  setupPWAInstall();
   setupNavigation();
   loadView('users');
+}
+
+// PWA Install functionality for Admin Panel
+let adminDeferredPrompt;
+
+function setupPWAInstall() {
+  const installBtn = document.getElementById('adminPwaInstallBtn');
+  
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    adminDeferredPrompt = e;
+    if (installBtn) {
+      installBtn.style.display = 'block';
+    }
+  });
+  
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!adminDeferredPrompt) {
+        await Swal.fire({
+          icon: 'info',
+          title: 'Already Installed',
+          text: 'App is already installed or not available for installation',
+          confirmButtonColor: '#6366f1'
+        });
+        return;
+      }
+      
+      adminDeferredPrompt.prompt();
+      const { outcome } = await adminDeferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        await Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'App installed successfully on your device!',
+          confirmButtonColor: '#6366f1'
+        });
+        installBtn.style.display = 'none';
+      }
+      
+      adminDeferredPrompt = null;
+    });
+  }
+  
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) {
+      installBtn.style.display = 'none';
+    }
+  });
 }
 
 async function setupThemeToggle() {
