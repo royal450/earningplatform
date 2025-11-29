@@ -1,12 +1,20 @@
 // Signup Page Logic
 import { auth } from '../shared/firebase-config.js';
-import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { createUserWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { setData, getData, runDbTransaction, updateBalance } from '../shared/db.js';
 import { generateReferralCode, showToast, showLoading, hideLoading } from '../shared/utils.js';
 import { redirectIfAuthenticated } from '../shared/auth-guard.js';
 
-// Check if user is already logged in
-redirectIfAuthenticated('dashboard.html');
+// Check if user is already logged in and show popup
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // User is signed in, show popup and redirect to signup page
+    showToast('You are already logged in! Redirecting to dashboard...', 'info');
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 2000);
+  }
+});
 
 // Auto-apply referral code from URL
 document.addEventListener('DOMContentLoaded', () => {
